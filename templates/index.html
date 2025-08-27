@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>by: cArbonAto</title>
+  <!-- Favicon -->
+  <link rel="icon" href="https://i.postimg.cc/KcNyWSR4/orinoco.jpg" type="image/png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1f3c88;
+      margin-bottom: 20px;
+      font-size: 2rem;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+      z-index: 1;
+      position: relative;
+    }
+
+    .superior-izquierda-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .imagen-superior-izquierda {
+      width: 60px;
+      height: auto;
+    }
+
+    .texto-superior-izquierda {
+      font-size: 0.85rem;
+      color: #555;
+      max-width: calc(100% - 70px);
+    }
+
+    .imagen-superior-derecha {
+      display: block;
+      max-width: 20%;
+      height: auto;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 0;
+    }
+
+    #busqueda {
+      width: 90%;
+      max-width: 400px;
+      padding: 12px 15px;
+      margin: 10px auto;
+      display: block;
+      border: 2px solid #1f3c88;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    #busqueda:focus { border-color: #4CAF50; outline: none; box-shadow: 0 0 8px rgba(76,175,80,0.4); }
+
+    #actualizarBtn {
+      display: block;
+      margin: 10px auto 20px;
+      padding: 12px 25px;
+      background-color: #4CAF50;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    #actualizarBtn:hover { background-color: #45a049; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
+    .tabla-responsive {
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      min-width: 0;
+    }
+    th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
+    th { background-color: #1f3c88; color: white; font-weight: 600; }
+    tr:nth-child(even) { background-color: #f7f9fb; }
+    tr:hover { background-color: #e8f0fe; transition: background-color 0.3s; }
+
+    @media (max-width: 1200px) {
+      .imagen-superior-derecha { max-width: 15%; top: 15px; right: 15px; }
+    }
+    @media (max-width: 992px) {
+      .imagen-superior-derecha { max-width: 12%; top: 10px; right: 10px; }
+    }
+    @media (max-width: 768px) {
+      th, td { font-size: 0.8rem; padding: 8px 5px; }
+      h1 { font-size: 1.5rem; }
+      #busqueda, #actualizarBtn { width: 95%; }
+      .imagen-superior-derecha { max-width: 35%; position: static; margin: 10px auto; display: block; }
+      .superior-izquierda-wrapper { flex-direction: column; align-items: flex-start; gap: 5px; }
+      .texto-superior-izquierda { max-width: 100%; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="superior-izquierda-wrapper">
+  <img src="https://www.pima.go.cr/wp-content/uploads/2023/11/facebook-2-1.jpg" class="imagen-superior-izquierda" alt="Logo izquierda">
+  <div class="texto-superior-izquierda">
+    Software diseñado por Yeifer Guevara, propietario de la página web y API conectada en tiempo real a 
+    <a href="https://www.pima.go.cr/boletin/" target="_blank">https://www.pima.go.cr/boletin/</a>
+
+    <div style="margin-top:60px; text-align:left;">
+      <span style="font-size:0.85rem; color:#333; font-weight:bold;">Patrocinado por:</span>
+      <a href="https://www.agrogova.com/" target="_blank" style="display:block; margin-top:5px;">
+        <img src="https://www.agrogova.com/img/logo.png" alt="AgroGova" style="max-width:120px; height:auto;">
+      </a>
+    </div>
+  </div>
+</div>
+
+<img src="https://i.postimg.cc/Dw4dShGz/istockphoto-1356315665-612x612.jpg" class="imagen-superior-derecha" alt="Logo derecha">
+
+<h1>Precios CENADA</h1>
+<input type="text" id="busqueda" placeholder="Buscar producto...">
+<button id="actualizarBtn">Actualizar datos</button>
+
+<div class="tabla-responsive">
+  <table id="tablaPrecios">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Mínimo</th>
+        <th>Máximo</th>
+        <th>Moda</th>
+        <th>Promedio</th>
+        <th>Unidad</th>
+        <th>Mayorista</th>
+        <th>Fecha</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="8">Cargando datos, tenga paciencia...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+let datosGlobales = [];
+
+async function cargarDatos() {
+  const tbody = document.querySelector("#tablaPrecios tbody");
+  tbody.innerHTML = "<tr><td colspan='8'>Cargando datos...</td></tr>";
+
+  try {
+    const res = await fetch("/api/precios");
+    const datos = await res.json();
+
+    if (datos.error) {
+      tbody.innerHTML = `<tr><td colspan='8'>${datos.error}</td></tr>`;
+      return;
+    }
+
+    datosGlobales = datos;
+    mostrarDatos(datos);
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan='8'>Error al cargar datos: ${err.message}</td></tr>`;
+  }
+}
+
+function mostrarDatos(datos) {
+  const tbody = document.querySelector("#tablaPrecios tbody");
+  if (!datos.length) {
+    tbody.innerHTML = "<tr><td colspan='8'>No hay datos disponibles</td></tr>";
+    return;
+  }
+  tbody.innerHTML = datos.map(item => `
+    <tr>
+      <td>${item.producto}</td>
+      <td>${item.minimo}</td>
+      <td>${item.maximo}</td>
+      <td>${item.moda}</td>
+      <td>${item.promedio}</td>
+      <td>${item.unidad}</td>
+      <td>${item.mayorista}</td>
+      <td>${item.fecha}</td>
+    </tr>
+  `).join("");
+}
+
+document.getElementById("busqueda").addEventListener("input", (e) => {
+  const valor = e.target.value.toLowerCase();
+  const filtrados = datosGlobales.filter(item => item.producto.toLowerCase().includes(valor));
+  mostrarDatos(filtrados);
+});
+
+document.getElementById("actualizarBtn").addEventListener("click", cargarDatos);
+
+cargarDatos();
+</script>
+
+</body>
+</html>
