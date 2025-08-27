@@ -98,10 +98,26 @@
       min-width: 0;
     }
     th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
-    th { background-color: #1f3c88; color: white; font-weight: 600; }
+    th { background-color: #1f3c88; color: white; font-weight: 600; cursor: pointer; }
     tr:nth-child(even) { background-color: #f7f9fb; }
     tr:hover { background-color: #e8f0fe; transition: background-color 0.3s; }
 
+    /* Loader */
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #1f3c88;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive dinámico */
     @media (max-width: 1200px) {
       .imagen-superior-derecha { max-width: 15%; top: 15px; right: 15px; }
     }
@@ -116,6 +132,30 @@
       .superior-izquierda-wrapper { flex-direction: column; align-items: flex-start; gap: 5px; }
       .texto-superior-izquierda { max-width: 100%; font-size: 0.8rem; }
     }
+
+    .patrocinadores {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-top: 60px;
+    }
+
+    .patrocinadores img {
+      max-width: 120px;
+      height: auto;
+    }
+
+    .patrocinadores img.orinoco {
+      max-width: 80px;
+      height: auto;
+    }
+
+    .metadatos {
+      margin-top: 30px;
+      font-size: 0.9rem;
+      color: #333;
+    }
+
   </style>
 </head>
 <body>
@@ -126,10 +166,13 @@
     Software diseñado por Yeifer Guevara, propietario de la página web y API conectada en tiempo real a 
     <a href="https://www.pima.go.cr/boletin/" target="_blank">https://www.pima.go.cr/boletin/</a>
 
-    <div style="margin-top:60px; text-align:left;">
-      <span style="font-size:0.85rem; color:#333; font-weight:bold;">Patrocinado por:</span>
-      <a href="https://www.agrogova.com/" target="_blank" style="display:block; margin-top:5px;">
-        <img src="https://www.agrogova.com/img/logo.png" alt="AgroGova" style="max-width:120px; height:auto;">
+    <div class="patrocinadores">
+      <span style="font-size:0.85rem; color:#333; font-weight:bold; margin-right:10px;">Patrocinado por:</span>
+      <a href="https://www.agrogova.com/" target="_blank">
+        <img src="https://www.agrogova.com/img/logo.png" alt="AgroGova">
+      </a>
+      
+        <img src="https://i.postimg.cc/KcNyWSR4/orinoco.jpg" alt="Orinoco" class="orinoco">
       </a>
     </div>
   </div>
@@ -139,78 +182,122 @@
 
 <h1>Precios CENADA</h1>
 <input type="text" id="busqueda" placeholder="Buscar producto...">
-<button id="actualizarBtn">Actualizar datos</button>
+<button id="actualizarBtn">🔄 Actualizar datos</button>
 
 <div class="tabla-responsive">
   <table id="tablaPrecios">
     <thead>
       <tr>
-        <th>Producto</th>
-        <th>Mínimo</th>
-        <th>Máximo</th>
-        <th>Moda</th>
-        <th>Promedio</th>
-        <th>Unidad</th>
-        <th>Mayorista</th>
-        <th>Fecha</th>
+        <th data-col="producto">Producto</th>
+        <th data-col="minimo">Mínimo</th>
+        <th data-col="maximo">Máximo</th>
+        <th data-col="moda">Moda</th>
+        <th data-col="promedio">Promedio</th>
+        <th data-col="unidad">Unidad</th>
+        <th data-col="mayorista">Mayorista</th>
+        <th data-col="fecha">Fecha</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td colspan="8">Cargando datos, tenga paciencia...</td></tr>
+      <tr><td colspan="8"><div class="loader"></div></td></tr>
     </tbody>
   </table>
 </div>
 
+<div id="metadatos" class="metadatos"></div>
+
 <script>
 let datosGlobales = [];
+let sortConfig = { col: null, asc: true };
+
+function escapeHtml(text) {
+  return String(text || '').replace(/[&<>"']/g, (m) => (
+    { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;" }[m]
+  ));
+}
 
 async function cargarDatos() {
   const tbody = document.querySelector("#tablaPrecios tbody");
-  tbody.innerHTML = "<tr><td colspan='8'>Cargando datos...</td></tr>";
+  tbody.innerHTML = "<tr><td colspan='8'><div class='loader'></div></td></tr>";
 
   try {
     const res = await fetch("/api/precios");
     const datos = await res.json();
 
-    if (datos.error) {
-      tbody.innerHTML = `<tr><td colspan='8'>${datos.error}</td></tr>`;
+    if (!Array.isArray(datos) || datos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan='8'>⚠️ No hay datos disponibles</td></tr>`;
       return;
     }
 
     datosGlobales = datos;
     mostrarDatos(datos);
+    if (datos[0]) mostrarMetadatos(datos[0]);
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan='8'>Error al cargar datos: ${err.message}</td></tr>`;
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan='8'>⚠️ No se pudo cargar la información. Intente de nuevo más tarde.</td></tr>`;
   }
 }
 
 function mostrarDatos(datos) {
   const tbody = document.querySelector("#tablaPrecios tbody");
-  if (!datos.length) {
+  const productos = datos.slice(1);
+
+  if (!productos.length) {
     tbody.innerHTML = "<tr><td colspan='8'>No hay datos disponibles</td></tr>";
     return;
   }
-  tbody.innerHTML = datos.map(item => `
+
+  tbody.innerHTML = productos.map(item => `
     <tr>
-      <td>${item.producto}</td>
-      <td>${item.minimo}</td>
-      <td>${item.maximo}</td>
-      <td>${item.moda}</td>
-      <td>${item.promedio}</td>
-      <td>${item.unidad}</td>
-      <td>${item.mayorista}</td>
-      <td>${item.fecha}</td>
+      <td>${escapeHtml(item.producto)}</td>
+      <td>${escapeHtml(item.minimo)}</td>
+      <td>${escapeHtml(item.maximo)}</td>
+      <td>${escapeHtml(item.moda)}</td>
+      <td>${escapeHtml(item.promedio)}</td>
+      <td>${escapeHtml(item.unidad)}</td>
+      <td>${escapeHtml(item.mayorista)}</td>
+      <td>${escapeHtml(item.fecha)}</td>
     </tr>
   `).join("");
 }
 
+function mostrarMetadatos(meta) {
+  const cont = document.getElementById("metadatos");
+  cont.innerHTML = `
+    <strong>Última ejecución del scraper:</strong> ${escapeHtml(meta.ultima_ejecucion_scraper || 'N/A')}<br>
+    <strong>Última actualización en Git:</strong> ${escapeHtml(meta.ultima_actualizacion_git || 'N/A')}
+  `;
+}
+
 document.getElementById("busqueda").addEventListener("input", (e) => {
   const valor = e.target.value.toLowerCase();
-  const filtrados = datosGlobales.filter(item => item.producto.toLowerCase().includes(valor));
-  mostrarDatos(filtrados);
+  const filtrados = datosGlobales.slice(1).filter(item => item.producto.toLowerCase().includes(valor));
+  mostrarDatos([datosGlobales[0], ...filtrados]);
 });
 
 document.getElementById("actualizarBtn").addEventListener("click", cargarDatos);
+
+document.querySelectorAll("#tablaPrecios thead th").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    if (!col) return;
+    sortConfig.asc = (sortConfig.col === col) ? !sortConfig.asc : true;
+    sortConfig.col = col;
+
+    const productos = [...datosGlobales.slice(1)].sort((a, b) => {
+      const valA = a[col] || "";
+      const valB = b[col] || "";
+      if (!isNaN(valA) && !isNaN(valB)) {
+        return sortConfig.asc ? valA - valB : valB - valA;
+      }
+      return sortConfig.asc 
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    mostrarDatos([datosGlobales[0], ...productos]);
+  });
+});
 
 cargarDatos();
 </script>
